@@ -8,9 +8,6 @@
 #The file implements also all functions for building the Laplacian
 #------------------------------------------------------------------------------
 
-epsilon <- 0.0 #this refers to Eq. 8 in the paper
-
-
 gs.graph <- function(N, bag.x.avg, sigma=1){
   G <- matrix(0, nrow=N, ncol=N)
   for (i in 1:(N-1)){
@@ -71,7 +68,8 @@ nc.graph <- function(data, N, map.bag){
 
 
 #The function computes the laplacian matrix of the graph represented as a matrix of nodes similarities, all >= 0
-laplacian <- function(similarity="G,s", data, nbag, sigma){
+#' @importFrom Matrix bdiag
+laplacian <- function(similarity="G,s", data, nbag, sigma, epsilon = 0){
 
   #To build mapping with original bag numbers. Now select map.bag[j]
   map.bag <- sort(unique(data$bag))
@@ -88,7 +86,7 @@ laplacian <- function(similarity="G,s", data, nbag, sigma){
 
     graph <- gs.graph(nbag, bag.x.avg, sigma)
 
-  }else if (similarity == "NC"){
+  } else if (similarity == "NC"){
     graph <- nc.graph(data, nbag, map.bag)
   }
 
@@ -98,23 +96,6 @@ laplacian <- function(similarity="G,s", data, nbag, sigma){
 
 #LMM algorithm
 laplacian.mean.map <- function(data, L, lambda=10, gamma=10, weight=NULL) {
-
-  f <- function(w) {
-    xw    <- X %*% w
-    ai    <- log(exp(xw) + exp(-xw))
-    ai    <- ifelse(is.finite(ai), ai, xw) # Handle numerical overflow for log(exp(..))
-    lterm <- sum(ai)
-    rterm <- w %*% (M*meanop)
-    loss  <- as.numeric(lterm - rterm + (0.5*lambda*(w %*% w)))
-    loss
-  }
-
-  g <- function(w) {
-    xw    <- as.vector(X %*% w)
-    lterm <- colSums(X*tanh(xw))
-    lterm - (M*meanop) + lambda*w
-  }
-
 
   #number of samples
   M <- nrow(data)
@@ -161,7 +142,10 @@ laplacian.mean.map <- function(data, L, lambda=10, gamma=10, weight=NULL) {
     sum(py * p.j.pos * v[1:N] - (1-py) * p.j.neg * v[(N+1):(2*N)])
   })
 
+  loss   <- logistic_loss(X, M*meanop)
+  d_loss <- d_logistic_loss(X, M*meanop)
+
   w0 <- rep(0.001,K)
-  result <- optim(w0, fn=f, gr=g, method="L-BFGS-B")
+  result <- optim(w0, fn=loss, gr=d_loss, method="L-BFGS-B")
   result$par
 }

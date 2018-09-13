@@ -6,7 +6,6 @@ library(pROC)
 #Hyperparameters
 lambda <- 10
 gamma <- .01
-sigma <- 1
 
 set.seed(123456)
 
@@ -54,15 +53,6 @@ test.auc  <- auc((testset$label+1)/2, c(test.pred))
 print(test.auc)
 
 
-#Laplacian Mean Map with similarity v^{G,s}
-L         <- laplacian(similarity="G,s", trainset, N, sigma=sigma)
-w.lmm     <- laplacian.mean.map(trainset, lambda, gamma, L = L)
-test.X    <- as.matrix(testset[,-c(1,2)])
-test.pred <- 1/(1+exp(-2*test.X %*% w.lmm))
-test.auc  <- auc((testset$label+1)/2, c(test.pred))
-print(test.auc)
-
-
 #Laplacian Mean Map with similarity v^NC
 L         <- laplacian(similarity="NC", trainset, N)
 w.lmm     <- laplacian.mean.map(trainset, lambda, gamma, L = L)
@@ -73,17 +63,16 @@ print(test.auc)
 
 
 #Alternating Mean Map started with MM
-w.amm     <- alternating.mean.map(trainset, lambda=lambda, init="MM")
+w.amm     <- alternating.mean.map(trainset, lambda=lambda, init="1")
 w.amm     <- w.amm$theta #the algorithm returns a structure that contains also the number of step until termination
 test.X    <- as.matrix(testset[,-c(1,2)])
 test.pred <- 1/(1+exp(-2*test.X %*% w.amm))
 test.auc  <- auc((testset$label+1)/2, c(test.pred))
 print(test.auc)
 
-
 #Alternating Mean Map started with LMM with similarity v^{G,s}
 L         <- laplacian(similarity="G,s", trainset, N, sigma=10)
-w.amm     <- alternating.mean.map(trainset, lambda=lambda, init="LMM", L=L, gamma=gamma)
+w.amm     <- alternating.mean.map(trainset, lambda=lambda, init="1", L=L, gamma=gamma, minmax = T)
 w.amm     <- w.amm$theta #the algorithm returns a structure that contains also the number of step until termination
 test.X    <- as.matrix(testset[,-c(1,2)])
 test.pred <- 1/(1+exp(-2*test.X %*% w.amm))

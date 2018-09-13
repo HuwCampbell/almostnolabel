@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Mean Meap algorithm
+# Mean Map algorithm
 #
 # The algorithm expects the data organized in data$bag and data$label (the proportions).
 # The rest is the features vector
@@ -36,22 +36,24 @@ mean.map <- function(data, lambda=10, weight=NULL) {
   bags <- 1:N
 
 
-  #To build mapping with original bag numbers
+  # To build mapping with original bag numbers
   map.bag <- sort(unique(data$bag))
 
   # weights matrix
   if (is.null(weight)) {
-    weight <- 0
     weight <- matrix(diag(1,N),ncol=N,nrow=N)
   }
-
-	meanop <- rep(0, K)
 
   # extract proportions
   proportions <- foreach(bag = map.bag, .combine=rbind) %do% {
     id <- which(data$bag==bag)
     data$label[id[1]]
   }
+  bag_sizes <- foreach(bag = map.bag, .combine=rbind) %do% {
+    id <- which(data$bag==bag)
+    length(id)
+  }
+
 
 	pi <- cbind(proportions, 1-proportions)
 
@@ -62,16 +64,17 @@ mean.map <- function(data, lambda=10, weight=NULL) {
   }
 
   # estimate the probability of the label over the dataset
-  py <- sum(proportions) / N
+  py     <- sum(proportions * bag_sizes) / N
+  psinv  <- solve((t(pi) %*% weight) %*% pi, t(pi) %*% weight)
 
-  psinv <- solve((t(pi) %*% weight) %*% pi, t(pi) %*% weight)
-
-	for(k in 1:K) {
+  # create the mean operator.
+	meanop <- sapply(1:K, function(k) {
 		v <- psinv %*% bag.x.avg[, k]
-		meanop[k] <- py * v[1] - (1-py) * v[2]
-	}
+		py * v[1] - (1-py) * v[2]
+	})
 
-  w0 <- rep(0.001,K)
-	result <- optim(w0, fn=f, gr=g, method="L-BFGS-B")#, control=list(trace=3, maxit=100))
+  # Initial weights for optimiser
+  w0     <- rep(0.001,K)
+	result <- optim(w0, fn=f, gr=g, method="L-BFGS-B")
 	result$par
 }
