@@ -1,6 +1,6 @@
 
 
-logistic_loss <- function(X, mean_operator)
+log_probabilities <- function(X, mean_operator)
   function(w) {
     xw    <- X %*% w
     ai    <- log(exp(xw) + exp(-xw))
@@ -11,7 +11,7 @@ logistic_loss <- function(X, mean_operator)
     loss
   }
 
-d_logistic_loss <- function(X, mean_operator)
+d_log_probabilities <- function(X, mean_operator)
   function(w) {
     xw    <- as.vector(X %*% w)
     lterm <- colSums(X*tanh(xw))

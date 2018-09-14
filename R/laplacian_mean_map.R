@@ -67,21 +67,26 @@ nc.graph <- function(data, N, map.bag){
 }
 
 
-#The function computes the laplacian matrix of the graph represented as a matrix of nodes similarities, all >= 0
+# The function computes the laplacian matrix of the graph represented as a matrix of nodes similarities, all >= 0
 #' @importFrom Matrix bdiag
-laplacian <- function(similarity="G,s", data, nbag, sigma, epsilon = 0){
+laplacian <- function(mf, nbag, similarity="G,s", sigma = 10, epsilon = 0, ...){
 
   #To build mapping with original bag numbers. Now select map.bag[j]
-  map.bag <- sort(unique(data$bag))
+
+  data_bags     <- model.response(mf)
+  feature_mat   <- model.matrix(attr(mf, "terms"), mf)
+  bag_sizes     <- table(data_bags)
+  N             <- length(bag_sizes)
+  bags          <- 1:N
 
   if (similarity == "G,s"){
 
-    X <- as.matrix(data[,-(1:2)])
+    feature_mat   <- model.matrix(attr(mf, "terms"), mf)
 
     #This computation is done by LMM too and might be factorise for efficiency
-    bag.x.avg <- foreach(bag = map.bag, .combine=rbind) %do% {
-      id <- which(data$bag==bag)
-      if (length(id)>1) { colMeans(X[id,]) } else { X[id,] }
+    bag.x.avg <- foreach(bag = bags, .combine=rbind) %do% {
+      id <- which(data_bags==bag)
+      if (length(id)>1) { colMeans(feature_mat[id,]) } else { feature_mat[id,] }
     }
 
     graph <- gs.graph(nbag, bag.x.avg, sigma)
@@ -94,58 +99,53 @@ laplacian <- function(similarity="G,s", data, nbag, sigma, epsilon = 0){
   bdiag(La,La) + diag(epsilon, 2*nrow(La))
 }
 
+optimise_laplacian <- function(formula, data, bag_proportions, ...) {
+  mf                 <- model.frame(formula, data)
+  laplacian_matrix   <- laplacian(mf, length(bag_proportions), ...)
+  mean_operator      <- laplacian_mean_map(mf, bag_proportions, laplacian_matrix, ...)
+  optimise_one_shot(mf,mean_operator)
+}
+
 #LMM algorithm
-laplacian.mean.map <- function(data, L, lambda=10, gamma=10, weight=NULL) {
+laplacian_mean_map <- function(mf, bag_proportions, L, gamma=1, weight=NULL, ...) {
+  data_bags     <- model.response(mf)
+  feature_mat   <- model.matrix(attr(mf, "terms"), mf)
+  num_features  <- ncol(feature_mat)
+  num_instances <- nrow(feature_mat)
 
-  #number of samples
-  M <- nrow(data)
-  X <- as.matrix(data[,-(1:2)])
   #number of features
-  K <- ncol(X)
   #number of bags
-  N <- length(unique(data$bag))
-  bags <- 1:N
+  bag_sizes <- table(data_bags)
+  N         <- length(bag_sizes)
+  bags      <- 1:N
 
-  #To build mapping with original bag numbers. Now select map.bag[j]
-  map.bag <- sort(unique(data$bag))
 
   # weights matrix
   if (is.null(weight)) {
     weight <- diag(1,N)
   }
 
-  # extract proportions
-  proportions <- foreach(bag = map.bag, .combine=rbind) %do% {
-    id <- which(data$bag==bag)
-    data$label[id[1]]
-  }
-
-  pi <- cbind(diag(as.vector(proportions)), diag(as.vector(1-proportions)))
+  pi <- cbind(diag(as.vector(bag_proportions)), diag(as.vector(1-bag_proportions)))
 
   # compute the average feature vector for each bag
-  bag.x.avg <- foreach(bag = map.bag, .combine=rbind) %do% {
-    id <- which(data$bag==bag)
-    if (length(id)>1) { colMeans(X[id,]) } else { X[id,] }
+  bag.x.avg <- foreach(bag = bags, .combine=rbind) %do% {
+    id <- which(data_bags==bag)
+    if (length(id)>1) { colMeans(feature_mat[id,]) } else { feature_mat[id,] }
   }
 
   #Estimate the probability of the label over the dataset
-  py <- sum(proportions) / N
+  py <- sum(bag_proportions) / N
 
   #Estimate the probability of the bag given a label
-  p.j.pos <- proportions /sum(proportions)
-  p.j.neg <- (1-proportions) / sum(1-proportions)
+  p.j.pos <- bag_proportions / sum(bag_proportions)
+  p.j.neg <- (1-bag_proportions) / sum(1-bag_proportions)
 
   psinv <- solve((t(pi) %*% weight) %*% pi + gamma * L, t(pi) %*% weight)
 
-  meanop <- unlist(foreach(k=1:K) %do% {
+  mean_op <- unlist(foreach(k=1:num_features) %do% {
     v <- psinv %*% bag.x.avg[, k]
     sum(py * p.j.pos * v[1:N] - (1-py) * p.j.neg * v[(N+1):(2*N)])
   })
 
-  loss   <- logistic_loss(X, M*meanop)
-  d_loss <- d_logistic_loss(X, M*meanop)
-
-  w0 <- rep(0.001,K)
-  result <- optim(w0, fn=loss, gr=d_loss, method="L-BFGS-B")
-  result$par
+  return(num_instances * mean_op)
 }
