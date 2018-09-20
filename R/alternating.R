@@ -10,16 +10,23 @@
 #' @importFrom dplyr group_by
 #' @importFrom dplyr transmute
 #' @importFrom dplyr min_rank
-optimise_alternating <- function(data_bags, feature_mat, proportions, model, max_order = FALSE, maxcount=30, ERR = 1e-3, callback = NULL, ...) {
+optimise_alternating <- function(data_bags, feature_mat, proportions, model, minmax = FALSE, maxcount = 30, ERR = 1e-3, callback = NULL, ...) {
   # Keep track of the loss for the end condition
   loss      <- +Inf
+  count     <- 0
+
+  # Selection of algorithm. AMM^min or AMM^max from the paper.
+  # These are just anonymous functions, taking the data frame
+  # produced below.
+  amm_min   <- . %>% transmute(label = ifelse(min_rank(score) < (1 - proportions[bag]) * n(), -1, 1))
+  amm_max   <- . %>% transmute(label = ifelse(min_rank(-score) < (1 - proportions[bag]) * n(), 1, -1))
+  ammfunc   <- if (minmax) amm_max else amm_min
 
   # Main optimisation loop
   repeat {
     score <- feature_mat %*% model
     mat   <- data.frame(bag = data_bags, score = score) %>%
-              group_by(bag) %>%
-              transmute(label = ifelse(min_rank(score) < (1 - proportions[bag]) * n(), -1, 1))
+              group_by(bag) %>% ammfunc
 
     # Approximate the mean operator for this
     # set of labels (using the true mean operator function).
@@ -35,10 +42,12 @@ optimise_alternating <- function(data_bags, feature_mat, proportions, model, max
 
     # Termination condition.
     loss_f  <- log_probabilities(feature_mat, mean_op)
-    if (abs(loss_f(model) - loss) < ERR)
+    if (abs(loss_f(model) - loss) < ERR || minmax && count > maxcount)
       break
 
+    count <- count + 1
     loss  <- loss_f(model)
   }
+
   model
 }
