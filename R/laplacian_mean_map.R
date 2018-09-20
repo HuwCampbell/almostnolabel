@@ -2,10 +2,10 @@
 #------------------------------------------------------------------------------
 # Laplacian Mean Map
 #
-#The algorithm expects the data organized in data$bag and data$label (the proportions).
-#The rest is the features vector.
+# The algorithm expects the data organized in data$bag and data$label (the proportions).
+# The rest is the features vector.
 #
-#The file implements also all functions for building the Laplacian
+# The file implements also all functions for building the Laplacian
 #------------------------------------------------------------------------------
 
 gs.graph <- function(N, bag.x.avg, sigma=1){
@@ -64,12 +64,42 @@ nc.graph <- function(data_bags, feature_mat, N){
   G
 }
 
-
-#' Compute the Laplacian matrix for a model.frame
+#' Laplacian Mean Map
 #'
-#' @param mf a model.frame object
-#' @param nbag
-#' @importFrom Matrix bdiag
+#' Generate a laplacian mean map for a dataset.
+#'
+#' @param data_bags
+#'   A factor vector of the bag factor for the training dataset.
+#'   Filled in by llp
+#' @param feature_mat
+#'   A matrix of features for each training instance
+#'   Filled in by llp
+#' @param bag_proportions
+#'   A numerical vector, with each entry representing the proportion
+#'   of positive instances for each bag. Must be in the order of the
+#'   levels of the data_bags factor.
+#'   Filled in by llp
+#' @param gamma
+#'   Interaction constant for the laplacian.
+#' @param weight
+#'   Weights matrix for the instances.
+#' @param bag_x_avg
+#'   Feature averages, by bag. Filled in by laplacian_mean_map
+#' @param similarity
+#'   Similarity function for determing the laplactian. Available
+#'   options are "G,s" and "NC".
+#' @param sigma
+#'   Scaling constant used in the G,s algorithm
+#' @param epsilon
+#'   Small constant to add to diagonal elements of the laplacian.
+#'   Values other than 0 mean the returned matrix will not be a true
+#'   laplacian matrix.
+#'
+#' @name laplacian
+NULL
+
+#' @rdname laplacian
+#' @export
 laplacian <- function(data_bags, feature_mat, bag_x_avg, similarity="G,s", sigma = 10, epsilon = 0, ...){
   bag_sizes     <- table(data_bags)
   nbag          <- length(bag_sizes)
@@ -86,8 +116,9 @@ laplacian <- function(data_bags, feature_mat, bag_x_avg, similarity="G,s", sigma
   bdiag(La,La) + diag(epsilon, 2*nrow(La))
 }
 
-#LMM algorithm
-laplacian_mean_map <- function(data_bags, feature_mat, bag_proportions, gamma=1, weight=NULL, ...) {
+#' @rdname laplacian
+#' @export
+laplacian_mean_map <- function(data_bags, feature_mat, bag_proportions, gamma = 1, weight = NULL, ...) {
   num_features     <- ncol(feature_mat)
   num_instances    <- nrow(feature_mat)
   bag_sizes        <- table(data_bags)

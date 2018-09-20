@@ -5,12 +5,37 @@
 #' loop, where the positive instances in each bag
 #' are determined from the previous iteration.
 #'
+#' @param data_bags
+#'   A factor vector of the bag factor for the training dataset.
+#'   Filled in by llp
+#' @param feature_mat
+#'   A matrix of features for each training instance
+#'   Filled in by llp
+#' @param bag_proportions
+#'   A numerical vector, with each entry representing the proportion
+#'   of positive instances for each bag. Must be in the order of the
+#'   levels of the data_bags factor.
+#'   Filled in by llp
+#' @param model
+#'   Initial model to use, as a weights vector for the features.
+#' @param minmax
+#'   Whether to use the AMM^max (when TRUE), or the default AMM^min
+#'   algorithm.
+#' @param maxcount
+#'   Maximum number of iterations to use under the AMM^max algorithm
+#' @param ERR
+#'   Stopping condition for the change in the loss in each round
+#'
+#' @details
+#'   One shouldn't need to call this function directly, as the `llp`
+#'   function will invoke it with the correct parameters.
+#'
 #' @export
 #' @importFrom dplyr %>%
 #' @importFrom dplyr group_by
 #' @importFrom dplyr transmute
 #' @importFrom dplyr min_rank
-optimise_alternating <- function(data_bags, feature_mat, proportions, model, minmax = FALSE, maxcount = 30, ERR = 1e-3, callback = NULL, ...) {
+optimise_alternating <- function(data_bags, feature_mat, proportions, model, minmax = FALSE, maxcount = 30, ERR = 1e-3, ...) {
   # Keep track of the loss for the end condition
   loss      <- +Inf
   count     <- 0

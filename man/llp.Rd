@@ -22,10 +22,13 @@ bag in the class}
 \item{alternating}{Whether to continue once the first optimisation
 is complete using the alternating mean map method.}
 
-\item{...}{Arguments to be passed to downstream components.}
+\item{...}{Arguments to be passed to downstream components.
+See, laplacian, laplacian_mean_map, and
+optimise_alternating for possible values.}
 }
 \description{
-Implements "(Almost) No Label No Cry", including
+Implements "(Almost) No Label No Cry", learning
+from label proportions algorithms. Including
 laplacian mean map, mean map, and alternating
-mean map methods
+mean map methods.
 }

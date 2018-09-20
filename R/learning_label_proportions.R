@@ -1,9 +1,10 @@
 
 #' Learning from Label Proportions
 #'
-#' Implements "(Almost) No Label No Cry", including
+#' Implements "(Almost) No Label No Cry", learning
+#' from label proportions algorithms. Including
 #' laplacian mean map, mean map, and alternating
-#' mean map methods
+#' mean map methods.
 #'
 #' @param formula
 #'   A formula object describing the bag vs.
@@ -22,6 +23,8 @@
 #'   is complete using the alternating mean map method.
 #' @param ...
 #'   Arguments to be passed to downstream components.
+#'   See, laplacian, laplacian_mean_map, and
+#'   optimise_alternating for possible values.
 #'
 #' @export
 #' @returns

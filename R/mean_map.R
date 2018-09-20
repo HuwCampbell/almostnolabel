@@ -3,7 +3,17 @@
 #' The algorithm expects the data organized in data$bag and data$label (the proportions).
 #' The rest is the features vector
 #'
-#' @param weight is matrix D_w in the paper
+#' @param data_bags
+#'   A factor vector of the bag factor for the training dataset.
+#'   Filled in by llp
+#' @param feature_mat
+#'   A matrix of features for each training instance
+#'   Filled in by llp
+#' @param bag_proportions
+#'   A numerical vector, with each entry representing the proportion
+#'   of positive instances for each bag. Must be in the order of the
+#'   levels of the data_bags factor.
+#'   Filled in by llp
 #'
 #' @export
 #' @importFrom foreach foreach

@@ -2,14 +2,42 @@
 % Please edit documentation in R/laplacian_mean_map.R
 \name{laplacian}
 \alias{laplacian}
-\title{Compute the Laplacian matrix for a model.frame}
+\alias{laplacian_mean_map}
+\title{Laplacian Mean Map}
 \usage{
 laplacian(data_bags, feature_mat, bag_x_avg, similarity = "G,s",
   sigma = 10, epsilon = 0, ...)
+
+laplacian_mean_map(data_bags, feature_mat, bag_proportions, gamma = 1,
+  weight = NULL, ...)
 }
 \arguments{
-\item{mf}{a model.frame object}
+\item{data_bags}{A factor vector of the bag factor for the training dataset.
+Filled in by llp}
+
+\item{feature_mat}{A matrix of features for each training instance
+Filled in by llp}
+
+\item{bag_x_avg}{Feature averages, by bag. Filled in by laplacian_mean_map}
+
+\item{similarity}{Similarity function for determing the laplactian. Available
+options are "G,s" and "NC".}
+
+\item{sigma}{Scaling constant used in the G,s algorithm}
+
+\item{epsilon}{Small constant to add to diagonal elements of the laplacian.
+Values other than 0 mean the returned matrix will not be a true
+laplacian matrix.}
+
+\item{bag_proportions}{A numerical vector, with each entry representing the proportion
+of positive instances for each bag. Must be in the order of the
+levels of the data_bags factor.
+Filled in by llp}
+
+\item{gamma}{Interaction constant for the laplacian.}
+
+\item{weight}{Weights matrix for the instances.}
 }
 \description{
-Compute the Laplacian matrix for a model.frame
+Generate a laplacian mean map for a dataset.
 }

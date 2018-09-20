@@ -7,5 +7,5 @@
 oracle(formula, data)
 }
 \description{
-Formulated with the mean operator
+But formulated with the mean operator
 }

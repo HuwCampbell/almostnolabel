@@ -12,5 +12,6 @@ optimise_one_shot(mat, mean_operator)
 \item{mean_operator}{a mean.operator object}
 }
 \description{
-Optimise a linear learner using the mean operator
+Given a true mean operator, this will yield
+identical results to glm with binomial(link = "logit").
 }
