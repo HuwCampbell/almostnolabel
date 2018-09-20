@@ -4,10 +4,10 @@
 \alias{optimise_one_shot}
 \title{Optimise a linear learner using the mean operator}
 \usage{
-optimise_one_shot(mf, mean_operator)
+optimise_one_shot(mat, mean_operator)
 }
 \arguments{
-\item{mf}{model.frame object}
+\item{mat}{a matrix}
 
 \item{mean_operator}{a mean.operator object}
 }

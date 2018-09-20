@@ -1,12 +1,14 @@
 #' Optimise a linear learner using the mean operator
 #'
-#' @param mf model.frame object
+#' Given a true mean operator, this will yield
+#' identical results to glm with binomial(link = "logit").
+#'
+#' @param mat a matrix
 #' @param mean_operator a mean.operator object
 #'
 #' @export
-optimise_one_shot <- function(mf, mean_operator) {
-  terms  <- attr(mf, "terms")
-  mat    <- model.matrix(terms, mf)
+#' @importFrom stats optim
+optimise_one_shot <- function(mat, mean_operator) {
   loss   <- log_probabilities(mat, mean_operator)
   d_loss <- d_log_probabilities(mat, mean_operator)
 
@@ -15,5 +17,5 @@ optimise_one_shot <- function(mf, mean_operator) {
   coef   <- result$par
   dn     <- colnames(mat)
   names(coef) <- dn
-  structure(list(coefficients = coef, rank = ncol(mat), qr = qr(mat)), class = "lm", terms = terms)
+  coef
 }
