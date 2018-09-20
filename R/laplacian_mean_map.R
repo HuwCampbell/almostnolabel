@@ -8,18 +8,18 @@
 # The file implements also all functions for building the Laplacian
 #------------------------------------------------------------------------------
 
-gs.graph <- function(N, bag.x.avg, sigma=1){
+gs_adjacency <- function(N, bag_x_avg, sigma=1){
   G <- matrix(0, nrow=N, ncol=N)
   for (i in 1:(N-1)){
     for (j in (i+1):N){
-      G[i,j] <- exp(-sqrt(sum((bag.x.avg[i,] - bag.x.avg[j,])^2))/sigma) # exp{ -|| mu_i - mu_j ||_2 / sigma }
+      G[i,j] <- exp(-sqrt(sum((bag_x_avg[i,] - bag_x_avg[j,])^2))/sigma) # exp{ -|| mu_i - mu_j ||_2 / sigma }
       G[j,i] <- G[i,j]
     }
   }
   G
 }
 
-assoc.distance <- function(bag1,bag2){
+assoc_distance <- function(bag1,bag2){
   sum <- 0
   for (i in seq_len(nrow(bag1)))
     for (j in seq_len(nrow(bag2)))
@@ -28,9 +28,7 @@ assoc.distance <- function(bag1,bag2){
   sum
 }
 
-#' @importFrom foreach foreach
-#' @importFrom foreach %do%
-nc.graph <- function(data_bags, feature_mat, N){
+nc_adjacency <- function(data_bags, feature_mat, N){
   G     <- matrix(0, nrow=N, ncol=N)
   assoc <- matrix(0, nrow=N, ncol=N)
   bags  <- sort(unique(data_bags))
@@ -40,7 +38,7 @@ nc.graph <- function(data_bags, feature_mat, N){
       if (j<i) {
         0.0
       } else {
-        assoc.distance(
+        assoc_distance(
           feature_mat[data_bags==bags[i],,drop = F]
         , feature_mat[data_bags==bags[j],,drop = F]
         )
@@ -107,8 +105,8 @@ laplacian <- function(data_bags, feature_mat, bag_x_avg, similarity="G,s", sigma
 
   adjacency <-
     switch(similarity
-    , "G,s" = gs.graph(nbag, bag_x_avg, sigma)
-    , "NC"  = nc.graph(data_bags, feature_mat, nbag)
+    , "G,s" = gs_adjacency(nbag, bag_x_avg, sigma)
+    , "NC"  = nc_adjacency(data_bags, feature_mat, nbag)
     , stop("Unknown adjacency algorithm for the laplacian")
     )
 

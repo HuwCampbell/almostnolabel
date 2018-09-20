@@ -1,0 +1,107 @@
+---
+title: "Learning with Label Proportions"
+author: "Huw Campbell"
+date: "`r Sys.Date()`"
+output: github_document
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, echo = FALSE, message = FALSE}
+library(nolabel)
+library(dplyr)
+library(Matrix)
+library(pROC)
+library(knitr)
+
+print.data.frame <- function(x)
+  kable(x[1:10, 1:7], row.names = F)
+
+set.seed(123456)
+```
+
+Learning with Label Proportions (LLP) could be described
+as the 4th learning framework, beside the more usual
+supervised, unsupervised, and semi-supervised learning
+ones.
+
+In LLP, one does not have *any* fully labelled training
+instances, they do however, have some statistical evidence,
+that instances grouped into certain bags have a proportion
+of their instances being positive ones.
+
+The dataset is provided in the form of (label, bag, features)
+with the label being still the binary labels.
+This is useful in case of testing the model.
+
+```{r}
+heart.sample <- heart[sample(nrow(heart)),]
+test.fold    <- 1:(floor(nrow(heart.sample)/5))
+testset      <- heart.sample[test.fold,]
+trainset     <- heart.sample[-test.fold,]
+proportions  <- (trainset %>% group_by(bag) %>%
+  summarise( prop = length(label[label == 1]) / n()))$prop
+
+
+print(trainset)
+```
+
+## Standard logistic regression with full labels
+
+Firstly looking at standard logistic regression, i.e., we
+have all the label information. The oracle function casts
+logistic regression into the mean map framework, so one
+could also use a `glm` here.
+
+```{r}
+w.lr      <- oracle(label ~ . -bag, trainset)
+test.pred <- predict(w.lr, testset)
+print(auc(testset$label, test.pred))
+```
+
+## Label proportion methods
+
+Starting with a helper function:
+
+```{r}
+test_run <- function(...) {
+  model     <- llp(bag ~ . -label, trainset, proportions, ...)
+  test.pred <- predict(model, testset)
+  print(auc(testset$label, test.pred))
+}
+```
+
+```{r}
+test_run(mode = "MM", alternating = F)
+```
+
+Laplacian Mean Map
+```{r}
+test_run(mode = "LMM", alternating = F)
+```
+
+Laplacian Mean Map with NC similarity
+```{r}
+test_run(mode = "LMM", similarity = "NC", alternating = F)
+```
+
+Alternating Mean Map with no mean map hints
+```{r}
+test_run()
+```
+
+Alternating Mean Map started with MM
+```{r}
+test_run(mode = "MM")
+```
+
+Alternating Mean Map started with LMM with NC similarity
+```{r}
+test_run(mode = "LMM", similarity = "NC")
+```
+
+Alternating Mean Map with no mean map hints
+```{r}
+test_run(max_order = T)
+```
