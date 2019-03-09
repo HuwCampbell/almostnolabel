@@ -51,7 +51,7 @@
 #' @importFrom stats model.frame
 #' @importFrom stats model.matrix
 #' @importFrom stats model.response
-llp <- function(formula, data, bag_proportions, mode = "LLM", alternating = T, ...) {
+llp <- function(formula, data, bag_proportions, mode = c("LMM", "MM", "1"), alternating = T, ...) {
   c           <- match.call()
   mf          <- model.frame(formula, data)
   terms       <- attr(mf, "terms")
@@ -67,11 +67,12 @@ llp <- function(formula, data, bag_proportions, mode = "LLM", alternating = T, .
 
   # Use an approximate mean operator to warm start the
   # alternating logistic regression optimisation.
+  mode <- match.arg(mode)
   mean_op <-
     switch(mode
     , "LMM"    = laplacian_mean_map(data_bags, feature_mat, bag_proportions, ...)
     , "MM"     = mean_map(data_bags, feature_mat, bag_proportions, ...)
-    , replicate(ncol(feature_mat), 1)
+    , "1"      = replicate(ncol(feature_mat), 1)
     )
 
   model <- optimise_one_shot(feature_mat, mean_op)
@@ -92,7 +93,7 @@ llp <- function(formula, data, bag_proportions, mode = "LLM", alternating = T, .
     , rank          = ncol(feature_mat)
     , qr            = qr(feature_mat)
     , terms         = terms
-    , family        = binomial(link = "log")
+    , family        = binomial(link = llp_link())
     , deviance      = NA
     , null.deviance = NA
     , df.residuals  = NA
@@ -130,7 +131,7 @@ oracle <- function(formula, data) {
     , rank          = ncol(feature_mat)
     , qr            = qr(feature_mat)
     , terms         = terms
-    , family        = binomial(link = exp_link())
+    , family        = binomial(link = llp_link())
     , deviance      = NA
     , null.deviance = NA
     , df.residuals  = NA
@@ -139,12 +140,15 @@ oracle <- function(formula, data) {
     )
 }
 
-exp_link <- function()
+llp_link <- function()
   structure(
     list(
-      linkfun = function(x) { 1/(1+exp(-x)) }
-    , linkinv = function(x) x
-    , mu.eta  = function(x) x
-    , valideta = function(x) x
-    , name = "link"
+      linkfun = function(mu) { - 1/2 * log(1/mu + 1) }
+    , linkinv = function(eta) { 1/(1+exp(-2 * eta)) }
+    , mu.eta  = function(eta) {
+        e2x <- exp(-2 * eta)
+        2 * e2x / ((e2x + 1 )^2)
+      }
+    , valideta = function(eta) TRUE
+    , name = "logistic"
   ), class = "link-glm")

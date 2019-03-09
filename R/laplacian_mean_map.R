@@ -102,16 +102,16 @@ NULL
 #' @rdname laplacian
 #' @export
 #' @importFrom Matrix bdiag
-laplacian <- function(data_bags, feature_mat, bag_x_avg, similarity="G,s", sigma = 10, epsilon = 0, ...){
+laplacian <- function(data_bags, feature_mat, bag_x_avg, similarity=c("G,s", "NC"), sigma = 10, epsilon = 0, ...){
   bag_sizes     <- table(data_bags)
   nbag          <- length(bag_sizes)
   num_features  <- ncol(feature_mat)
 
+  similarity <- match.arg(similarity)
   adjacency <-
     switch(similarity
     , "G,s" = gs_adjacency(nbag, bag_x_avg, sigma)
     , "NC"  = nc_adjacency(data_bags, feature_mat, nbag)
-    , stop("Unknown adjacency algorithm for the laplacian")
     )
 
   La <- diag(rowSums(adjacency)) - adjacency #The Laplacian matrix of the graph
