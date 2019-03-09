@@ -51,8 +51,8 @@ nc_adjacency <- function(data_bags, feature_mat, N){
     for (j in (i+1):N)
       assoc[j,i] <- assoc[i,j]
 
-  for (i in 1:N)
-    for (j in 1:N){
+  for (i in seq_len(N))
+    for (j in seq_len(N)) {
       if (i==j)
         next #Leave 0 when B1=B2
       else
@@ -80,7 +80,8 @@ nc_adjacency <- function(data_bags, feature_mat, N){
 #' @param gamma
 #'   Interaction constant for the laplacian.
 #' @param weight
-#'   Weights matrix for the instances.
+#'   an optional vector of weights to be used in the fitting
+#'   process. Should be ‘NULL’ or a numeric vector.
 #' @param bag_x_avg
 #'   Feature averages, by bag. Filled in by laplacian_mean_map
 #' @param similarity
@@ -92,12 +93,15 @@ nc_adjacency <- function(data_bags, feature_mat, N){
 #'   Small constant to add to diagonal elements of the laplacian.
 #'   Values other than 0 mean the returned matrix will not be a true
 #'   laplacian matrix.
+#' @param ...
+#'   Parameters to pass through to laplacian
 #'
 #' @name laplacian
 NULL
 
 #' @rdname laplacian
 #' @export
+#' @importFrom Matrix bdiag
 laplacian <- function(data_bags, feature_mat, bag_x_avg, similarity="G,s", sigma = 10, epsilon = 0, ...){
   bag_sizes     <- table(data_bags)
   nbag          <- length(bag_sizes)
@@ -116,12 +120,15 @@ laplacian <- function(data_bags, feature_mat, bag_x_avg, similarity="G,s", sigma
 
 #' @rdname laplacian
 #' @export
+#' @importFrom dplyr %>%
+#' @importFrom dplyr group_by
+#' @importFrom dplyr summarise_all
+#' @importFrom dplyr select
 laplacian_mean_map <- function(data_bags, feature_mat, bag_proportions, gamma = 1, weight = NULL, ...) {
   num_features     <- ncol(feature_mat)
   num_instances    <- nrow(feature_mat)
   bag_sizes        <- table(data_bags)
   nbag             <- length(bag_sizes)
-  bags             <- sort(unique(data_bags))
 
   # weights matrix
   if (is.null(weight)) {
@@ -131,12 +138,12 @@ laplacian_mean_map <- function(data_bags, feature_mat, bag_proportions, gamma = 
   pi <- cbind(diag(bag_proportions), diag(1-bag_proportions))
 
   # compute the average feature vector for each bag
-  bag_x_avg <- foreach(bag = bags, .combine=rbind) %do% {
-    id <- which(data_bags==bag)
-    if(length(id) == 0) 0 else
-    if(length(id) == 1) feature_mat[id,] else
-    colMeans(feature_mat[id,])
-  }
+  bag_x_avg <-
+    data.frame(bag = data_bags, as.data.frame(feature_mat)) %>%
+    group_by(.data$bag) %>%
+    summarise_all(mean) %>%
+    select(-.data$bag) %>%
+    as.matrix
 
   laplacian_matrix <- laplacian(data_bags, feature_mat, bag_x_avg, ...)
 

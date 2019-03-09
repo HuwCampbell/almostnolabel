@@ -5,7 +5,7 @@
 \title{Optimise with the Alternating Mean Map method}
 \usage{
 optimise_alternating(data_bags, feature_mat, proportions, model,
-  minmax = FALSE, maxcount = 30, ERR = 0.001, ...)
+  minmax = FALSE, maxcount = 30, ERR = 0.001)
 }
 \arguments{
 \item{data_bags}{A factor vector of the bag factor for the training dataset.

@@ -14,10 +14,15 @@
 #'   of positive instances for each bag. Must be in the order of the
 #'   levels of the data_bags factor.
 #'   Filled in by llp
+#' @param weight
+#'   an optional vector of weights to be used in the fitting
+#'   process. Should be ‘NULL’ or a numeric vector.
 #'
 #' @export
-#' @importFrom foreach foreach
-#' @importFrom foreach %do%
+#' @importFrom dplyr %>%
+#' @importFrom dplyr group_by
+#' @importFrom dplyr summarise_all
+#' @importFrom dplyr select
 mean_map <- function(data_bags, feature_mat, bag_proportions, weight=NULL, ...) {
   num_features  <- ncol(feature_mat)
   num_instances <- nrow(feature_mat)
@@ -26,7 +31,6 @@ mean_map <- function(data_bags, feature_mat, bag_proportions, weight=NULL, ...) 
   #number of bags
   bag_sizes     <- table(data_bags)
   nbag          <- length(bag_sizes)
-  bags          <- sort(unique(data_bags))
 
   # weights matrix
   if (is.null(weight)) {
@@ -36,12 +40,12 @@ mean_map <- function(data_bags, feature_mat, bag_proportions, weight=NULL, ...) 
 	pi <- cbind(bag_proportions, 1-bag_proportions)
 
   #compute the average feature vector for each bag
-  bag_x_avg <- foreach(bag = bags, .combine=rbind) %do% {
-    id <- which(data_bags==bag)
-    if(length(id) == 0) NA else
-    if(length(id) == 1) feature_mat[id,] else
-    colMeans(feature_mat[id,])
-  }
+  bag_x_avg <-
+    data.frame(bag = data_bags, as.data.frame(feature_mat)) %>%
+    group_by(.data$bag) %>%
+    summarise_all(mean) %>%
+    select(-.data$bag) %>%
+    as.matrix
 
   # estimate the probability of the label over the dataset
   py     <- sum(bag_proportions) / nbag

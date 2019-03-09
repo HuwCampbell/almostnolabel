@@ -8,27 +8,47 @@ llp(formula, data, bag_proportions, mode = "LLM", alternating = T, ...)
 }
 \arguments{
 \item{formula}{A formula object describing the bag vs.
-features to use.}
+features to use. The reponse variable will
+be coerced to a `factor` if it is not already.}
 
 \item{data}{An R data.frame where each row represents a
 training instance. Must contain a bag column,
-referred to in the formulat.}
+referred to in the formula.}
 
 \item{bag_proportions}{A lookup of bag id to the proportion of the
-bag in the class}
+bag in the class. Must be in the same order as
+the levels of the response variable.}
 
-\item{mode}{The starting mode for the mean map generation}
+\item{mode}{The starting mode for the mean map generation,
+see details.}
 
 \item{alternating}{Whether to continue once the first optimisation
 is complete using the alternating mean map method.}
 
 \item{...}{Arguments to be passed to downstream components.
-See, laplacian, laplacian_mean_map, and
-optimise_alternating for possible values.}
+See, \code{\link{laplacian}},
+\code{\link{laplacian_mean_map}}, and
+\code{\link{optimise_alternating}}
+for possible values.}
+}
+\value{
+A value of class `llpm`, which derives from `lm`.
+  This returns the same structure of a value from
+  the `lm` function, however, residuals can not be
+  known, due to the lack of available labels.
 }
 \description{
 Implements "(Almost) No Label No Cry", learning
 from label proportions algorithms. Including
 laplacian mean map, mean map, and alternating
 mean map methods.
+}
+\details{
+An llp predictor has the form 'bag ~ terms' where
+  the bag is a factor variable indictating which
+  bag the observation is in, and terms follows the
+  usual meaning. When using llp one can apply the
+  same functions to the terms as one would when using
+  the \code{\link[base]{lm}} and \code{\link[base]{glm}}
+  functions.
 }

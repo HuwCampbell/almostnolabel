@@ -17,6 +17,9 @@ Filled in by llp}
 of positive instances for each bag. Must be in the order of the
 levels of the data_bags factor.
 Filled in by llp}
+
+\item{weight}{an optional vector of weights to be used in the fitting
+process. Should be ‘NULL’ or a numeric vector.}
 }
 \description{
 The algorithm expects the data organized in data$bag and data$label (the proportions).

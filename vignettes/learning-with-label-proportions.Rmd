@@ -28,7 +28,7 @@ ones.
 
 In LLP, one does not have *any* fully labelled training
 instances, they do however, have some statistical evidence,
-that instances grouped into certain bags have a proportion
+in that instances grouped into certain bags have a proportion
 of their instances being positive ones.
 
 The dataset is provided in the form of (label, bag, features)
@@ -91,17 +91,17 @@ Alternating Mean Map with no mean map hints
 test_run()
 ```
 
-Alternating Mean Map started with MM
+Alternating Mean Map initialised with MM
 ```{r}
 test_run(mode = "MM")
 ```
 
-Alternating Mean Map started with LMM with NC similarity
+Alternating Mean Map initialised with LMM with NC similarity
 ```{r}
 test_run(mode = "LMM", similarity = "NC")
 ```
 
-Alternating Mean Map with no mean map hints
+Alternating Mean Map - Max, with no mean map hints
 ```{r}
 test_run(max_order = T)
 ```

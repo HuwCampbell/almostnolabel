@@ -29,6 +29,8 @@ options are "G,s" and "NC".}
 Values other than 0 mean the returned matrix will not be a true
 laplacian matrix.}
 
+\item{...}{Parameters to pass through to laplacian}
+
 \item{bag_proportions}{A numerical vector, with each entry representing the proportion
 of positive instances for each bag. Must be in the order of the
 levels of the data_bags factor.
@@ -36,7 +38,8 @@ Filled in by llp}
 
 \item{gamma}{Interaction constant for the laplacian.}
 
-\item{weight}{Weights matrix for the instances.}
+\item{weight}{an optional vector of weights to be used in the fitting
+process. Should be ‘NULL’ or a numeric vector.}
 }
 \description{
 Generate a laplacian mean map for a dataset.

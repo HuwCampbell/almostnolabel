@@ -8,30 +8,45 @@
 #'
 #' @param formula
 #'   A formula object describing the bag vs.
-#'   features to use.
+#'   features to use. The reponse variable will
+#'   be coerced to a `factor` if it is not already.
 #' @param data
 #'   An R data.frame where each row represents a
 #'   training instance. Must contain a bag column,
-#'   referred to in the formulat.
+#'   referred to in the formula.
 #' @param bag_proportions
 #'   A lookup of bag id to the proportion of the
-#'   bag in the class
+#'   bag in the class. Must be in the same order as
+#'   the levels of the response variable.
 #' @param mode
-#'   The starting mode for the mean map generation
+#'   The starting mode for the mean map generation,
+#'   see details.
 #' @param alternating
 #'   Whether to continue once the first optimisation
 #'   is complete using the alternating mean map method.
 #' @param ...
 #'   Arguments to be passed to downstream components.
-#'   See, laplacian, laplacian_mean_map, and
-#'   optimise_alternating for possible values.
+#'   See, \code{\link{laplacian}},
+#'   \code{\link{laplacian_mean_map}}, and
+#'   \code{\link{optimise_alternating}}
+#'   for possible values.
 #'
 #' @export
-#' @returns
-#'   A value of class `lm`. This returns the same
-#'   structure of a value from the `lm` function,
-#'   however, residuals can not be known, due to
-#'   the lack of available labels.
+#' @return
+#'   A value of class `llpm`, which derives from `lm`.
+#'   This returns the same structure of a value from
+#'   the `lm` function, however, residuals can not be
+#'   known, due to the lack of available labels.
+#'
+#' @details
+#'   An llp predictor has the form 'bag ~ terms' where
+#'   the bag is a factor variable indictating which
+#'   bag the observation is in, and terms follows the
+#'   usual meaning. When using llp one can apply the
+#'   same functions to the terms as one would when using
+#'   the \code{\link[base]{lm}} and \code{\link[base]{glm}}
+#'   functions.
+#'
 #'
 #' @importFrom stats model.frame
 #' @importFrom stats model.matrix
@@ -65,26 +80,39 @@ llp <- function(formula, data, bag_proportions, mode = "LLM", alternating = T, .
   # regression if requested.
   final <-
     if (alternating) {
-      optimise_alternating(data_bags, feature_mat, bag_proportions, model = model, ...)
+      optimise_alternating(data_bags, feature_mat, bag_proportions, model = model)
     } else model
 
   # Wrap in an lm with the required parameters
   # for it to work with predict.lm
   structure(
     list(
-      call = c
-    , coefficients = final
-    , rank         = ncol(feature_mat)
-    , qr           = qr(feature_mat)
-    , terms        = terms
-    , df.residuals = 0
-    ), class = c("llp", "lm")
+      call          = c
+    , coefficients  = final
+    , rank          = ncol(feature_mat)
+    , qr            = qr(feature_mat)
+    , terms         = terms
+    , family        = binomial(link = "log")
+    , deviance      = NA
+    , null.deviance = NA
+    , df.residuals  = NA
+    , aic           = NA
+    ), class = c("llp", "glm", "lm")
     )
 }
 
 #' Logistic regression
 #'
-#' But formulated with the mean operator
+#' But formulated within the llp framework.
+#'
+#' @param formula
+#'   A formula object describing the bag vs.
+#'   features to use. The reponse variable will
+#'   be coerced to a `factor` if it is not already.
+#' @param data
+#'   An R data.frame where each row represents a
+#'   training instance. Must contain a bag column,
+#'   referred to in the formula.
 #' @export
 oracle <- function(formula, data) {
   c             <- match.call()
@@ -97,12 +125,26 @@ oracle <- function(formula, data) {
 
   structure(
     list(
-      call = c
-    , coefficients = coefficients
-    , rank         = ncol(feature_mat)
-    , qr           = qr(feature_mat)
-    , terms        = terms
-    , df.residuals = 0
-    ), class = c("llp", "lm")
+      call          = c
+    , coefficients  = coefficients
+    , rank          = ncol(feature_mat)
+    , qr            = qr(feature_mat)
+    , terms         = terms
+    , family        = binomial(link = exp_link())
+    , deviance      = NA
+    , null.deviance = NA
+    , df.residuals  = NA
+    , aic           = NA
+    ), class = c("llp", "glm", "lm")
     )
 }
+
+exp_link <- function()
+  structure(
+    list(
+      linkfun = function(x) { 1/(1+exp(-x)) }
+    , linkinv = function(x) x
+    , mu.eta  = function(x) x
+    , valideta = function(x) x
+    , name = "link"
+  ), class = "link-glm")

@@ -35,7 +35,9 @@
 #' @importFrom dplyr group_by
 #' @importFrom dplyr transmute
 #' @importFrom dplyr min_rank
-optimise_alternating <- function(data_bags, feature_mat, proportions, model, minmax = FALSE, maxcount = 30, ERR = 1e-3, ...) {
+#' @importFrom dplyr n
+#' @importFrom dplyr .data
+optimise_alternating <- function(data_bags, feature_mat, proportions, model, minmax = FALSE, maxcount = 30, ERR = 1e-3) {
   # Keep track of the loss for the end condition
   loss      <- +Inf
   count     <- 0
@@ -43,20 +45,20 @@ optimise_alternating <- function(data_bags, feature_mat, proportions, model, min
   # Selection of algorithm. AMM^min or AMM^max from the paper.
   # These are just anonymous functions, taking the data frame
   # produced below.
-  amm_min   <- . %>% transmute(label = ifelse(min_rank(score) < (1 - proportions[bag]) * n(), -1, 1))
-  amm_max   <- . %>% transmute(label = ifelse(min_rank(-score) < (1 - proportions[bag]) * n(), 1, -1))
+  amm_min   <- function(x) x %>% transmute(label = ifelse(min_rank(score) < (1 - proportions[.data$bag]) * n(), -1, 1))
+  amm_max   <- function(x) x %>% transmute(label = ifelse(min_rank(-score) < (1 - proportions[.data$bag]) * n(), 1, -1))
   ammfunc   <- if (minmax) amm_max else amm_min
 
   # Main optimisation loop
   repeat {
     score <- feature_mat %*% model
     mat   <- data.frame(bag = data_bags, score = score) %>%
-              group_by(bag) %>% ammfunc
+              group_by(.data$bag) %>% ammfunc
 
     # Approximate the mean operator for this
     # set of labels (using the true mean operator function).
     # This casts the proplem directly as logistic
-    # regression inside teh main loop.
+    # regression inside the main loop.
     mean_op <- true_mean_op(mat$label, feature_mat)
 
     # Optimise with this mean operator, getting a new
