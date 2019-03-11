@@ -4,7 +4,8 @@
 \alias{llp}
 \title{Learning from Label Proportions}
 \usage{
-llp(formula, data, bag_proportions, mode = "LLM", alternating = T, ...)
+llp(formula, data, bag_proportions, mode = c("LMM", "MM", "1"),
+  alternating = T, ...)
 }
 \arguments{
 \item{formula}{A formula object describing the bag vs.
@@ -49,6 +50,6 @@ An llp predictor has the form 'bag ~ terms' where
   bag the observation is in, and terms follows the
   usual meaning. When using llp one can apply the
   same functions to the terms as one would when using
-  the \code{\link[base]{lm}} and \code{\link[base]{glm}}
+  the \code{\link{lm}} and \code{\link{glm}}
   functions.
 }

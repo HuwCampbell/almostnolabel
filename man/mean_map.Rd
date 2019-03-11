@@ -20,6 +20,8 @@ Filled in by llp}
 
 \item{weight}{an optional vector of weights to be used in the fitting
 process. Should be ‘NULL’ or a numeric vector.}
+
+\item{...}{ignored}
 }
 \description{
 The algorithm expects the data organized in data$bag and data$label (the proportions).

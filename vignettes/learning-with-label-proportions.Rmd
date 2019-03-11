@@ -4,6 +4,7 @@ author: "Huw Campbell"
 date: "`r Sys.Date()`"
 output: github_document
 vignette: >
+  %\VignetteIndexEntry{Learning with Label Proportions Tutorial}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -88,7 +89,7 @@ test_run(mode = "LMM", similarity = "NC", alternating = F)
 
 Alternating Mean Map with no mean map hints
 ```{r}
-test_run()
+test_run(mode = "1")
 ```
 
 Alternating Mean Map initialised with MM

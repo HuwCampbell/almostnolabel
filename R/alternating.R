@@ -11,7 +11,7 @@
 #' @param feature_mat
 #'   A matrix of features for each training instance
 #'   Filled in by llp
-#' @param bag_proportions
+#' @param proportions
 #'   A numerical vector, with each entry representing the proportion
 #'   of positive instances for each bag. Must be in the order of the
 #'   levels of the data_bags factor.

@@ -44,10 +44,10 @@
 #'   bag the observation is in, and terms follows the
 #'   usual meaning. When using llp one can apply the
 #'   same functions to the terms as one would when using
-#'   the \code{\link[base]{lm}} and \code{\link[base]{glm}}
+#'   the \code{\link{lm}} and \code{\link{glm}}
 #'   functions.
 #'
-#'
+#' @importFrom stats binomial
 #' @importFrom stats model.frame
 #' @importFrom stats model.matrix
 #' @importFrom stats model.response
@@ -98,8 +98,8 @@ llp <- function(formula, data, bag_proportions, mode = c("LMM", "MM", "1"), alte
     , null.deviance = NA
     , df.residuals  = NA
     , aic           = NA
-    ), class = c("llp", "glm", "lm")
-    )
+    ), class = c("llm", "glm", "lm")
+  )
 }
 
 #' Logistic regression
@@ -114,6 +114,7 @@ llp <- function(formula, data, bag_proportions, mode = c("LMM", "MM", "1"), alte
 #'   An R data.frame where each row represents a
 #'   training instance. Must contain a bag column,
 #'   referred to in the formula.
+#' @importFrom stats binomial
 #' @export
 oracle <- function(formula, data) {
   c             <- match.call()
@@ -136,10 +137,13 @@ oracle <- function(formula, data) {
     , null.deviance = NA
     , df.residuals  = NA
     , aic           = NA
-    ), class = c("llp", "glm", "lm")
+    ), class = c("llm", "glm", "lm")
     )
 }
 
+# Link function for our model which will
+# elicit a probabilities when we use
+# predict(type = "response")
 llp_link <- function()
   structure(
     list(
@@ -151,4 +155,5 @@ llp_link <- function()
       }
     , valideta = function(eta) TRUE
     , name = "logistic"
-  ), class = "link-glm")
+    ), class = "link-glm"
+  )

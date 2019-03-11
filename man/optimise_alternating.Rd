@@ -14,6 +14,11 @@ Filled in by llp}
 \item{feature_mat}{A matrix of features for each training instance
 Filled in by llp}
 
+\item{proportions}{A numerical vector, with each entry representing the proportion
+of positive instances for each bag. Must be in the order of the
+levels of the data_bags factor.
+Filled in by llp}
+
 \item{model}{Initial model to use, as a weights vector for the features.}
 
 \item{minmax}{Whether to use the AMM^max (when TRUE), or the default AMM^min
@@ -22,11 +27,6 @@ algorithm.}
 \item{maxcount}{Maximum number of iterations to use under the AMM^max algorithm}
 
 \item{ERR}{Stopping condition for the change in the loss in each round}
-
-\item{bag_proportions}{A numerical vector, with each entry representing the proportion
-of positive instances for each bag. Must be in the order of the
-levels of the data_bags factor.
-Filled in by llp}
 }
 \description{
 Performs logistic regression in an optimisation

@@ -5,7 +5,7 @@
 \alias{laplacian_mean_map}
 \title{Laplacian Mean Map}
 \usage{
-laplacian(data_bags, feature_mat, bag_x_avg, similarity = "G,s",
+laplacian(data_bags, feature_mat, bag_x_avg, similarity = c("G,s", "NC"),
   sigma = 10, epsilon = 0, ...)
 
 laplacian_mean_map(data_bags, feature_mat, bag_proportions, gamma = 1,

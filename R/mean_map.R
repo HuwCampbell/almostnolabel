@@ -17,6 +17,8 @@
 #' @param weight
 #'   an optional vector of weights to be used in the fitting
 #'   process. Should be ‘NULL’ or a numeric vector.
+#' @param ...
+#'   ignored
 #'
 #' @export
 #' @importFrom dplyr %>%
