@@ -79,21 +79,20 @@ llp <- function(formula, data, bag_proportions, mode = c("LMM", "MM", "1"), alte
 
   # Produce the final model using alternating logistic
   # regression if requested.
-  final <-
-    if (alternating) {
-      optimise_alternating(data_bags, feature_mat, bag_proportions, model = model)
-    } else model
+  if (alternating) {
+    model <- optimise_alternating(data_bags, feature_mat, bag_proportions, model = model)
+  }
 
   # Wrap in an lm with the required parameters
   # for it to work with predict.lm
   structure(
     list(
       call          = c
-    , coefficients  = final
+    , coefficients  = model
     , rank          = ncol(feature_mat)
     , qr            = qr(feature_mat)
     , terms         = terms
-    , family        = binomial(link = llp_link())
+    , family        = binomial(link = llp_link)
     , deviance      = NA
     , null.deviance = NA
     , df.residuals  = NA
@@ -132,7 +131,7 @@ oracle <- function(formula, data) {
     , rank          = ncol(feature_mat)
     , qr            = qr(feature_mat)
     , terms         = terms
-    , family        = binomial(link = llp_link())
+    , family        = binomial(link = llp_link)
     , deviance      = NA
     , null.deviance = NA
     , df.residuals  = NA
@@ -143,12 +142,12 @@ oracle <- function(formula, data) {
 
 # Link function for our model which will
 # elicit a probabilities when we use
-# predict(type = "response")
-llp_link <- function()
+# predict with type = "response"
+llp_link <-
   structure(
     list(
       linkfun = function(mu) { - 1/2 * log(1/mu + 1) }
-    , linkinv = function(eta) { 1/(1+exp(-2 * eta)) }
+    , linkinv = function(eta) { 1/(1 + exp(-2 * eta)) }
     , mu.eta  = function(eta) {
         e2x <- exp(-2 * eta)
         2 * e2x / ((e2x + 1 )^2)
